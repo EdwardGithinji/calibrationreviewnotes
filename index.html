@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calibration Review Notes</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+
+      .container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      select, .textbox {
+        margin-right: 10px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+      }
+
+      select {
+        min-width: 150px;
+        appearance: none;
+        background-color: #fff;
+        background-image: url('data:image/svg+xml;utf8,<svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z" fill="rgba(0,0,0,0.54)"/></svg>');
+        background-repeat: no-repeat;
+        background-position-x: 100%;
+        background-position-y: 50%;
+      }
+
+      .textbox {
+        width: 300px;
+        resize: both;
+      }
+
+      button {
+        margin-top: 10px;
+        padding: 10px 20px;
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      #json-output {
+        margin-top: 20px;
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        select, .textbox {
+          width: 100%;
+          margin-right: 0;
+          margin-bottom: 10px;
+        }
+
+        button {
+          width: 100%;
+        }
+      }
+
+</style>
+</head>
+<body>
+  <div id="form-container"></div>
+  <button id="add-button">Add Comment</button>
+  <button id="submit-button">Generate JSON</button>
+  <textarea id="json-output" rows="10" cols="50" readonly></textarea>
+  <button id="copy-button">Copy JSON to Clipboard</button>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const options = {
+          "General": ['Calibration', 'Clarification', 'corrupted or unworkable task','Fast review', 'General feedback - other' , 'Disagree on relative ratings', 'NEEDS CANCELLATION', 'TASK TOO EASY'],
+          "Minor Issue": ['AMBIGUOUS RESPONSE', 'Critique rating accuracy', 'FACTUAL INACCURACY - MINOR', 'INCORRECT RELATIVE RATINGS', 'Incorrectly identifies issues missed', 'MINOR GRAMMATICAL ISSUES', 'Minor issue - other', 'MISSING HELPFUL TEXT / INFORMATION', 'RATIONALES - INCONSISTENT RATIONALES', 'STYLE ISSUE - TONE / FLOW', 'STYLE ISSUE - UNENGAGING', 'STYLE ISSUE - VISUAL', 'TASK SHOULD HAVE BEEN DECLINED', 'UNNECESSARILY LONG / WORDY', 'Rubric - Lack of necessary context on Summary', 'Rubric - Vague or not specific to the user prompt', 'Rubric - Too specific to the Ideal Completion', 'Rubric - Wrong Flexibility', 'Rubric - Ambiguous text or information', 'Rubric - Partially missing answer (or answer example)', 'Rubric - Personalizing the assistant', 'Rubric - Grammar or spelling mistakes', 'Rubric - Unnecessarily long/wordy', 'Rubric - Other'],
+          "Major Issue": ['AI GENERATED CONTENT', 'ANSWER BEFORE CHAIN-OF-THOUGHT', 'CODE STUB / LAZY CODE', 'DOES NOT FOLLOW CAMPAIGN / BATCH INSTRUCTIONS', 'DOES NOT FOLLOW SYSTEM MESSAGE / CONVERSATION CONTEXT', 'FACTUAL INACCURACY - MAJOR', 'IDENTICAL CONTENT TO OTHER TASKS', 'INAPPROPRIATE / DISALLOWED CONTENT', 'INCORRECT FINAL ANSWER', 'Incorrect relative ratings', 'Incorrectly identifies issues missed','INVALID / UNJUSTIFIED RATINGS', 'INVALID TOOL USE', 'INVALID TRAINER CODE', 'IRRELEVANT RESPONSE / ANSWER', 'Major issue - other', 'MISSING FORM RESPONSE', 'RUBRIC - LACKING DETAIL / EXAMPLES', 'Rubric - Lack of necessary context on Summary', 'Rubric - Wrong context information on Summary', 'Rubric - Vague or not specific to the user prompt', 'Rubric - Not structured', 'Rubric - Not self-contained', 'Rubric - Mentioning tools syntax', 'Rubric - Factual Inaccuracy', 'Rubric - Missing answer (or answer example)', 'Rubric - Incorrect answer (or answer example)', 'Rubric - Other', 'SPELLING / GRAMMAR / INCOHERENT TEXT', 'Wrong Agreement/ disagreement'],
+          "Praise": ['GOOD CATCH', 'GREAT DETAIL', 'Great style', 'No common errors found', 'Praise - other']
+        };
+
+        function populateDropdown(dropdown, options) {
+          const defaultOption = document.createElement('option');
+          defaultOption.value = '';
+          defaultOption.text = 'Select an option';
+          defaultOption.disabled = true;
+          defaultOption.selected = true;
+          dropdown.appendChild(defaultOption);
+
+          options.forEach(optionText => {
+            const option = document.createElement('option');
+            option.value = optionText;
+            option.text = optionText;
+            dropdown.appendChild(option);
+          });
+        }
+
+        function createContainer() {
+          const container = document.createElement('div');
+          container.classList.add('container');
+
+          const dropdown1 = document.createElement('select');
+          dropdown1.classList.add('dropdown1');
+          populateDropdown(dropdown1, Object.keys(options));
+
+          const dropdown3 = document.createElement('select');
+          dropdown3.classList.add('dropdown3');
+          const defaultOption = document.createElement('option');
+          defaultOption.value = '';
+          defaultOption.text = 'Select an option';
+          defaultOption.disabled = true;
+          defaultOption.selected = true;
+          dropdown3.appendChild(defaultOption);
+
+          const textbox = document.createElement('input');
+          textbox.type = 'text';
+          textbox.classList.add('textbox');
+          textbox.placeholder = 'Enter text here';
+
+          container.appendChild(dropdown1);
+          container.appendChild(dropdown3);
+          container.appendChild(textbox);
+
+          document.getElementById('form-container').appendChild(container);
+
+          dropdown1.addEventListener('change', function() {
+            dropdown3.innerHTML = '';
+            populateDropdown(dropdown3, options[dropdown1.value]);
+          });
+        }
+
+        document.getElementById('add-button').addEventListener('click', createContainer);
+
+        document.getElementById('submit-button').addEventListener('click', function() {
+          const containers = document.querySelectorAll('.container');
+          const data = {};
+          let allValid = true;
+
+          // Initialize keys for all options in dropdown1 with empty arrays
+          Object.keys(options).forEach(option => {
+            data[option] = [];
+          });
+
+          containers.forEach(container => {
+            const dropdown1 = container.querySelector('.dropdown1').value;
+            const dropdown3 = container.querySelector('.dropdown3').value;
+            const textbox = container.querySelector('.textbox').value.trim();
+
+            if (textbox === '' || !dropdown1 || !dropdown3) {
+              allValid = false;
+              return;
+            }
+
+            // Add entry to the appropriate first dropdown option list
+            const entry = {};
+            entry[dropdown3] = textbox;
+            if (data[dropdown1]) {
+              data[dropdown1].push(entry);
+            }
+          });
+
+          if (allValid) {
+            const jsonOutput = document.getElementById('json-output');
+            const jsonString = JSON.stringify(data, null, 2);
+            jsonOutput.value = jsonString;
+            console.log(jsonString);
+          } else {
+            alert('Please fill in all fields before submitting.');
+          }
+        });
+
+        document.getElementById('copy-button').addEventListener('click', function() {
+          const jsonOutput = document.getElementById('json-output');
+          jsonOutput.select();
+          document.execCommand('copy');
+          alert('JSON copied to clipboard!');
+        });
+
+        // Initial container creation
+        createContainer();
+      });
+
+  </script>
+</body>
+</html>
